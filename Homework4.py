@@ -25,29 +25,6 @@ plt.ylabel('y')
 plt.title('Scatter Plot of x and y')
 plt.show()
 
-x_mean = np.mean(x)
-x_std = np.std(x)
-y_mean = np.mean(y)
-y_std = np.std(y)
-
-print(f"x mean: {x_mean}, x std: {x_std}")
-print(f"y mean: {y_mean}, y std: {y_std}")
-
-# Normalize the data
-x_normalized = (x - x_mean) / x_std
-y_normalized = (y - y_mean) / y_std
-
-# Update the DataFrame with normalized values
-df['x_normalized'] = x_normalized
-df['y_normalized'] = y_normalized
-
-# Check the first few rows of the updated DataFrame
-df.head()
-X_normalized = df['x_normalized'].values.reshape(-1, 1)
-y_normalized = df['y_normalized'].values
-
-
-
 X = df['x'].values.reshape(-1, 1)  
 y = df['y'].values
 
@@ -75,7 +52,7 @@ class MLP(torch.nn.Module):
                 
             # 1st hidden layer
             torch.nn.Linear(num_features, 500),
-            torch.nn.Sigmoid(),
+            torch.nn.ReLU(),
 
             # 2nd hidden layer
             torch.nn.Linear(500, 300),
@@ -108,8 +85,8 @@ class MyDataset(Dataset):
     def __len__(self):
         return self.labels.shape[0]
 
-#train_ds = MyDataset(X, y)
-train_ds = MyDataset(X_normalized, y_normalized)
+train_ds = MyDataset(X, y)
+
 
 train_loader = DataLoader(
     dataset=train_ds,
@@ -126,6 +103,7 @@ def compute_accuracy(model, dataloader):
     with torch.no_grad():
         for features, labels in dataloader:
             predictions = model(features)
+            labels =labels.view(-1,1)
             mse_loss += F.mse_loss(predictions, labels, reduction='sum').item()
             total_examples += len(labels)
     return mse_loss / total_examples
@@ -144,7 +122,7 @@ for epoch in range(num_epochs):
     for features, labels in train_loader:
 
         logits = model(features)
-        
+        labels =labels.view(-1,1)
         loss = F.mse_loss(logits, labels) # Loss function
         
         optimizer.zero_grad()
