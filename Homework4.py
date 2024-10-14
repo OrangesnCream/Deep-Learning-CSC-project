@@ -16,14 +16,7 @@ df.head()
 
 import matplotlib.pyplot as plt
 
-x = df['x'].values
-y = df['y'].values 
 
-plt.scatter(x, y, marker='o')
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('Scatter Plot of x and y')
-plt.show()
 
 X = df['x'].values.reshape(-1, 1)  
 y = df['y'].values
@@ -114,11 +107,15 @@ torch.manual_seed(123)
 model = MLP(num_features=1, num_classes=1)
 #optimizer = torch.optim.SGD(model.parameters(), lr=0.001) # Stochastic gradient descent
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-num_epochs = 2000
+num_epochs = 500
+
+training_losses = []
+
 
 for epoch in range(num_epochs):
     
     model = model.train()
+    epoch_loss = 0 
     for features, labels in train_loader:
 
         logits = model(features)
@@ -128,7 +125,9 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-    
+        epoch_loss += loss.item()
+    avg_epoch_loss = epoch_loss / len(train_loader)
+    training_losses.append(avg_epoch_loss)
     train_acc = compute_accuracy(model, train_loader)
     print(f"Epoch {epoch+1}/{num_epochs}, Train ACC: {train_acc:.4f}")
 
@@ -148,4 +147,16 @@ def plot_fitted_line(X, y, model):
     plt.legend()
     plt.show()
 
+def plot_loss(epochCount,losses):
+    epochs = range(1, epochCount + 1)
+    plt.plot(epochs, losses, label='Training Loss (MSE)')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss (MSE)')
+    plt.yscale('log')
+    plt.title('Training Loss vs. Epoch')
+    plt.legend()
+    plt.show()
+
 plot_fitted_line(X, y, model)
+
+plot_loss(num_epochs,training_losses)
